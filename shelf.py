@@ -85,24 +85,20 @@ class Shelf(LaiCiGou):
     # 按条件挂出繁育所有的狗
     def shelf_by_rare_num(self, rare_num, price):
         page_size = 10
-        total = self.get_pets_count()
+        total = self.get_idle_pets_count()
         pages = total // page_size if total % page_size == 0 else (total // page_size + 1)
         for page_no in range(pages):
             page_no = page_no + 1
             log('处理第{0}页：'.format(page_no))
-            pets = self.get_pets(page_no, page_size, pages, total)
+            pets = self.get_idle_pets(page_no, page_size)
             for pet in pets:
-                if pet['isCooling'] or pet['lockStatus'] == 1:
-                    continue
-
                 pet_info = self.get_pet_info_on_market(pet['petId'])
                 pet_rare_num = self.get_rare_amount(pet_info['attributes'])
                 if pet_rare_num != rare_num:
                     continue
 
-                if pet['shelfStatus'] == 0:
-                    log('挂出繁育 {0}，{1}稀，价格 {2}'.format(pet['petId'], rare_num, price))
-                    self.shelf(pet['petId'], price)
+                log('挂出繁育 {0}，{1}稀，价格 {2}'.format(pet['petId'], rare_num, price))
+                self.shelf(pet['petId'], price)
 
             time.sleep(5)
 
@@ -118,27 +114,24 @@ class Shelf(LaiCiGou):
             return
 
         page_size = 10
-        total = self.get_pets_count()
+        total = self.get_idle_pets_count()
         pages = total // page_size if total % page_size == 0 else (total // page_size + 1)
         for page_no in range(pages):
             page_no = page_no + 1
             log('处理第{0}页：'.format(page_no))
-            pets = self.get_pets(page_no, page_size, pages, total)
+            pets = self.get_idle_pets(page_no, page_size)
             for pet in pets:
-                if pet['isCooling'] or pet['lockStatus'] == 1:
-                    continue
-                time.sleep(3)
+                time.sleep(6)
                 pet_info = self.get_pet_info_on_market(pet['petId'])
                 rare_num = self.get_rare_amount(pet_info['attributes'])
                 if rare_num not in rare_num_price_dic:
                     continue
 
                 price = rare_num_price_dic[rare_num]
-                if pet['shelfStatus'] == 0:
-                    log('挂出繁育 {0}，{1}稀，价格 {2}'.format(pet['petId'], rare_num, price))
-                    order_id, nonce = self.create(pet['petId'], price)
-                    if order_id:
-                        self.confirm(pet['petId'], order_id, nonce)
+                log('挂出繁育 {0}，{1}稀，价格 {2}'.format(pet['petId'], rare_num, price))
+                order_id, nonce = self.create(pet['petId'], price)
+                if order_id:
+                    self.confirm(pet['petId'], order_id, nonce)
 
             time.sleep(5)
 

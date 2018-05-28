@@ -81,6 +81,30 @@ class LaiCiGou:
     def get_baby_pets(self, page_no, page_size, page_total, total_count):
         return self._get_baby_pets_data(page_no, page_size, page_total, total_count)['dataList']
 
+    # 获取空闲狗狗数据
+    def _get_idle_pets_data(self, page_no, page_size):
+        url = 'https://pet-chain.baidu.com/data/breed/petList'
+        headers = self.headers_template
+        headers['Referer'] = 'https://pet-chain.baidu.com/chain/chooseMyDog?appId=1&tpl='
+        data = {
+            "pageNo": page_no,
+            "pageSize": page_size,
+            "requestId": int(time.time() * 1000),
+            "appId": 1,
+            "tpl": ""
+        }
+        r = requests.post(url, headers=headers, data=json.dumps(data))
+        response = json.loads(r.content)
+        return response['data']
+
+    # 获取空闲狗狗总数
+    def get_idle_pets_count(self):
+        return self._get_idle_pets_data(1, 10)['totalCount']
+
+    # 分页获取空闲狗狗
+    def get_idle_pets(self, page_no, page_size):
+        return self._get_idle_pets_data(page_no, page_size)['dataList']
+
     # 获取市场上的狗狗信息
     def get_pet_info_on_market(self, pet_id):
         url = 'https://pet-chain.baidu.com/data/pet/queryPetById'
@@ -135,7 +159,11 @@ class LaiCiGou:
                 amount = amount + 1
 
         return amount
+
+
 if __name__ == '__main__':
     lai_ci_gou = LaiCiGou(cookie)
-    total = lai_ci_gou.get_pets_count()
+    # total = lai_ci_gou.get_pets_count()
+    # log(total)
+    total = lai_ci_gou.get_idle_pets_count()
     log(total)
