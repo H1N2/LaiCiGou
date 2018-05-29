@@ -84,14 +84,16 @@ class Shelf(LaiCiGou):
 
     # 按条件挂出繁育所有的狗
     def shelf_by_rare_num(self, rare_num, price):
-        page_size = 10
-        total = self.get_idle_pets_count()
-        pages = total // page_size if total % page_size == 0 else (total // page_size + 1)
-        for page_no in range(pages):
-            page_no = page_no + 1
-            log('处理第{0}页：'.format(page_no))
-            pets = self.get_idle_pets(page_no, page_size)
+        pages = 0
+        while True:
+            pets = self.get_idle_pets(1, 10)
+            if len(pets) == 0:
+                break
+
+            pages = pages + 1
+            log('处理第{0}页：'.format(pages))
             for pet in pets:
+                time.sleep(10)
                 pet_info = self.get_pet_info_on_market(pet['petId'])
                 pet_rare_num = self.get_rare_amount(pet_info['attributes'])
                 if pet_rare_num != rare_num:
@@ -113,15 +115,16 @@ class Shelf(LaiCiGou):
             log('没有设置价格字典！')
             return
 
-        page_size = 10
-        total = self.get_idle_pets_count()
-        pages = total // page_size if total % page_size == 0 else (total // page_size + 1)
-        for page_no in range(pages):
-            page_no = page_no + 1
-            log('处理第{0}页：'.format(page_no))
-            pets = self.get_idle_pets(page_no, page_size)
+        pages = 0
+        while True:
+            pets = self.get_idle_pets(1, 10)
+            if len(pets) == 0:
+                break
+
+            pages = pages + 1
+            log('处理第{0}页：'.format(pages))
             for pet in pets:
-                time.sleep(6)
+                time.sleep(10)
                 pet_info = self.get_pet_info_on_market(pet['petId'])
                 rare_num = self.get_rare_amount(pet_info['attributes'])
                 if rare_num not in rare_num_price_dic:
