@@ -3,6 +3,8 @@ import requests
 import json
 import time
 import app.logger.logger as logger
+import app.db.mongo as mongo
+from app.pet_collector import Collector
 from app.config.cfg import COOKIE as cookie
 from app.config.cfg import PASSWORD as password
 from app.config.cfg import BAIDU_PUBLIC_KEY as baidu_pub_key
@@ -123,9 +125,18 @@ class Shelf(LaiCiGou):
             pages = pages + 1
             logger.info('处理第{0}页：'.format(pages))
             for pet in pets:
-                time.sleep(10)
-                pet_info = self.get_pet_info_on_market(pet['petId'])
-                rare_num = self.get_rare_amount(pet_info['attributes'])
+                #time.sleep(10)
+                # 先到本地数据库中查询，避免去百度频繁查询（百度控制的查询间隔目前为10秒）导致被拒绝的情况
+                exist = mongo.pet_collection.find_one({'petId':pet['petId']})
+                if exist:
+                    rare_num = exist['rareAmount']
+                else:
+                    pet_info = self.get_pet_info_on_market(pet['petId'])
+                    rare_num = self.get_rare_amount(pet_info['attributes'])
+                    # 如果本地数据库还没有收录，则将其收录
+                    pet_collector = Collector(self.cookie)
+                    pet_collector.query_save_pet_and_ancestors(pet['petId'])
+
                 if rare_num not in rare_num_price_dic:
                     continue
 
