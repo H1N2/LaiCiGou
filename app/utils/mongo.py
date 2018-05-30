@@ -34,7 +34,7 @@ def check_duplicate_pet():
         count = mongo.pet_collection.find({'petId': pet['petId']}).count()
         if count > 1:
             duplicate.append(pet['petId'])
-            logger.info('检查第 {0} 条狗狗 {1} ：有重复'.format(index, pet['petId']))
+            logger.warn('检查第 {0} 条狗狗 {1} ：有重复'.format(index, pet['petId']))
         else:
             logger.info('检查第 {0} 条狗狗 {1} ：无重复'.format(index, pet['petId']))
 

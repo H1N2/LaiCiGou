@@ -29,7 +29,7 @@ class Sign(LaiCiGou):
         r = requests.post(url, headers=headers, data=json.dumps(data))
         response = json.loads(r.content)
         if response['errorNo'] != '00':
-            logger.info('签到失败：{0}'.format(response['errorMsg']))
+            logger.fail('签到失败：{0}'.format(response['errorMsg']))
 
         info = response['data']
         if info['isSigned']:

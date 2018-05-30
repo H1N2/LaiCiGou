@@ -80,7 +80,7 @@ class Buy(LaiCiGou):
         r = requests.post(url, headers=headers, data=json.dumps(data))
         response = json.loads(r.content)
         if response['errorNo'] != '00':
-            logger.info('获取验证码失败：{0}'.format(response['errorMsg']))
+            logger.err('获取验证码失败：{0}'.format(response['errorMsg']))
             return None, None
 
         return response['data']['seed'], response['data']['img']
@@ -103,7 +103,7 @@ class Buy(LaiCiGou):
         r = requests.post(url, headers=headers, data=json.dumps(data))
         response = json.loads(r.content)
         if response['errorNo'] != '00':
-            logger.info('创建单子失败：{0}'.format(response['errorMsg']))
+            logger.fail('创建单子失败：{0}'.format(response['errorMsg']))
 
         return response
 
@@ -124,7 +124,7 @@ class Buy(LaiCiGou):
         r = requests.post(url, headers=headers, data=json.dumps(data))
         response = json.loads(r.content)
         if response['errorNo'] != '00':
-            logger.info('买入失败: {0}'.format(response['errorMsg']))
+            logger.fail('买入失败: {0}'.format(response['errorMsg']))
 
         return response
 
@@ -208,7 +208,7 @@ class Buy(LaiCiGou):
 
                     # 10018：您今日交易次数已超限，明天再试试吧
                     if response['errorNo'] == '10018':
-                        logger.info('达到最大交易次数时已购买 {0} 条'.format(count))
+                        logger.warn('达到最大交易次数时已购买 {0} 条'.format(count))
                         return
                 time.sleep(5)
             except:

@@ -1,32 +1,23 @@
 # coding = utf-8
-
-import os
-import requests
-import json
-import time
-import traceback
-import matplotlib.pyplot as plt
-import numpy as np
-from pylab import mpl
-from scipy.interpolate import spline
-from datetime import datetime
-
-import matplotlib.dates as dt
-
-import matplotlib.dates as mdates
-import matplotlib.pyplot as plt
+print('This is a \033[1;93m test \033[0m!')
+print('This is a \033[1;32;43m test \033[0m!')
+print('\033[1;33;44mThis is a test !\033[0m')
 
 
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.ticker as ticker
+class ConsoleColors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
 
-X = np.linspace(-15, 15, 3)
-Y = np.sinc(X)
+    def disable(self):
+        self.HEADER = ''
+        self.OKBLUE = ''
+        self.OKGREEN = ''
+        self.WARNING = ''
+        self.FAIL = ''
+        self.ENDC = ''
 
-ax = plt.axes()
-ax.xaxis.set_major_locator(ticker.MultipleLocator(5))
-ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
-
-plt.plot(X, Y, c = 'k')
-plt.show()
+print(ConsoleColors.WARNING + "Warning: No active frommets remain. Continue?"+ ConsoleColors.ENDC)

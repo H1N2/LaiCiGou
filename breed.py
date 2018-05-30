@@ -58,9 +58,9 @@ class Breed(LaiCiGou):
         r = requests.post(url, headers=headers, data=json.dumps(data))
         response = json.loads(r.content)
         if response['errorNo'] == '00':
-            logger.info('繁育下单成功')
+            logger.suc('繁育下单成功')
         else:
-            logger.info('繁育下单失败: {0}'.format(response['errorMsg']))
+            logger.fail('繁育下单失败: {0}'.format(response['errorMsg']))
 
         return response
 
@@ -80,9 +80,9 @@ class Breed(LaiCiGou):
         r = requests.post(url, headers=headers, data=json.dumps(data))
         response = json.loads(r.content)
         if response['errorNo'] == '00':
-            logger.info('繁育确认成功')
+            logger.suc('繁育确认成功')
         else:
-            logger.info('繁育确认失败: {0}'.format(response['errorMsg']))
+            logger.fail('繁育确认失败: {0}'.format(response['errorMsg']))
 
         return response
 
@@ -163,7 +163,7 @@ class Breed(LaiCiGou):
             try:
                 father, mother = self.get_parents(father_rare_num, mother_rare_num)
                 if not father or not mother:
-                    logger.info('无满足条件的繁育双亲， 一分钟后重试')
+                    logger.warn('无满足条件的繁育双亲， 一分钟后重试')
                     time.sleep(60)
                     continue
 

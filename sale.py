@@ -36,7 +36,7 @@ class Sale(LaiCiGou):
         r = requests.post(url, headers=headers, data=json.dumps(data))
         response = json.loads(r.content)
         if response['errorNo'] != '00':
-            logger.info('创建单子失败：{0}'.format(response['errorMsg']))
+            logger.fail('创建单子失败：{0}'.format(response['errorMsg']))
 
         return response
 
@@ -57,7 +57,7 @@ class Sale(LaiCiGou):
         r = requests.post(url, headers=headers, data=json.dumps(data))
         response = json.loads(r.content)
         if response['errorNo'] != '00':
-            logger.info('卖出单子确认失败: {0}'.format(response['errorMsg']))
+            logger.fail('卖出单子确认失败: {0}'.format(response['errorMsg']))
 
         return response
 
@@ -83,7 +83,7 @@ class Sale(LaiCiGou):
         r = requests.post(url, headers=headers, data=json.dumps(data))
         response = json.loads(r.content)
         if response['errorNo'] != '00':
-            logger.info('取消卖出失败: {0}'.format(response['errorMsg']))
+            logger.fail('取消卖出失败: {0}'.format(response['errorMsg']))
 
         return response
 
@@ -116,7 +116,7 @@ class Sale(LaiCiGou):
                 if not include_angel:
                     physique = self.get_attribute(pet_info['attributes'], '体型')
                     if physique == '天使':
-                        logger.info('天使狗狗不卖： {0}'.format(pet['petId']))
+                        logger.warn('天使狗狗不卖： {0}'.format(pet['petId']))
                         continue
 
                 self.sale(pet['petId'], rare_num_price_dic[rare_num])

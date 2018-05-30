@@ -34,7 +34,7 @@ class Shelf(LaiCiGou):
         r = requests.post(url, headers=headers, data=json.dumps(data))
         response = json.loads(r.content)
         if response['errorNo'] != '00':
-            logger.info('创建单子失败：{0}'.format(response['errorMsg']))
+            logger.fail('创建单子失败：{0}'.format(response['errorMsg']))
             return None, None
 
         return response['data']['orderId'], response['data']['nonce']
@@ -55,7 +55,7 @@ class Shelf(LaiCiGou):
         r = requests.post(url, headers=headers, data=json.dumps(data))
         response = json.loads(r.content)
         if response['errorNo'] != '00':
-            logger.info('挂出繁育失败: {0}'.format(response['errorMsg']))
+            logger.fail('挂出繁育失败: {0}'.format(response['errorMsg']))
 
         return response
 
@@ -79,7 +79,7 @@ class Shelf(LaiCiGou):
         r = requests.post(url, headers=headers, data=json.dumps(data))
         response = json.loads(r.content)
         if response['errorNo'] != '00':
-            logger.info('繁育下架失败: {0}'.format(response['errorMsg']))
+            logger.fail('繁育下架失败: {0}'.format(response['errorMsg']))
 
         return response
 
@@ -113,7 +113,7 @@ class Shelf(LaiCiGou):
     # 按稀有属性数量一次性挂出繁育所有的狗
     def shelf_by_rare_nums_once(self, rare_num_price_dic=None):
         if rare_num_price_dic is None:
-            logger.info('没有设置价格字典！')
+            logger.warn('没有设置价格字典！')
             return
 
         pages = 0
