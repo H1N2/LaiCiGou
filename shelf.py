@@ -125,9 +125,8 @@ class Shelf(LaiCiGou):
             pages = pages + 1
             logger.info('处理第{0}页：'.format(pages))
             for pet in pets:
-                #time.sleep(10)
-                # 先到本地数据库中查询，避免去百度频繁查询（百度控制的查询间隔目前为10秒）导致被拒绝的情况
-                exist = mongo.pet_collection.find_one({'petId':pet['petId']})
+                # 先到本地数据库中查询
+                exist = mongo.pet_collection.find_one({'petId': pet['petId']})
                 if exist:
                     rare_num = exist['rareAmount']
                 else:
@@ -140,6 +139,7 @@ class Shelf(LaiCiGou):
                 if rare_num not in rare_num_price_dic:
                     continue
 
+                time.sleep(10)  # 百度控制的上架时间间隔目前约为10秒，少于10秒会被拒绝
                 price = rare_num_price_dic[rare_num]
                 logger.info('挂出繁育 {0}，{1}稀，价格 {2}'.format(pet['petId'], rare_num, price))
                 order_id, nonce = self.create(pet['petId'], price)
@@ -152,7 +152,7 @@ class Shelf(LaiCiGou):
 if __name__ == '__main__':
     shelf = Shelf(cookie)
     rare_num_price_dic = {0: 100, 1: 100, 2: 100, 3: 100, 4: 500, 5: 10000}
-    #rare_num_price_dic = {0: 100, 1: 100, 2: 100, 3: 100, 4: 500}
+    # rare_num_price_dic = {0: 100, 1: 100, 2: 100, 3: 100, 4: 500}
     # 按稀有属性数量批次挂出繁育，时间上会成倍增加，如不需按稀有数量批次上架请使用shelf_by_rare_num_once
     # shelf.shelf_by_rare_nums(rare_num_price_dic)
     # 按稀有属性数量一次性挂出繁育所有的狗
