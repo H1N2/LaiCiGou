@@ -3,10 +3,11 @@ import requests
 import json
 import xmltodict
 import re
-from cfg import COOKIE as cookie
-from logger import log
-from lai_ci_gou import LaiCiGou
 import copy
+import app.db.mongo as mongo
+import app.logger.logger as logger
+from app.config.cfg import COOKIE as cookie
+from lai_ci_gou import LaiCiGou
 
 
 class Svg(LaiCiGou):
@@ -304,29 +305,23 @@ class Svg(LaiCiGou):
         svg_json1 = xmltodict.parse(xml1)
 
         shape1 = self.get_body_shape(svg_json1)
-        log(json.dumps(shape1))
+        logger.info(json.dumps(shape1))
 
         xml2 = self.get_pet_svg(pet_id2)
         svg_json2 = xmltodict.parse(xml2)
 
         shape2 = self.get_body_shape(svg_json2)
-        log(json.dumps(shape2))
+        logger.info(json.dumps(shape2))
 
         return self.ordered(shape1) == self.ordered(shape2)
 
     def get_xmls(self):
-        from pymongo import MongoClient
-        client = MongoClient()
-        db = client['lai_ci_gou']
-        attributes = db['attributes']
-
-        pets = db['pets']
-
         # names = ['眼睛', '嘴巴']
         names = ['嘴巴']
         for name in names:
-            for attribute in attributes.find({"name": name}):
-                pet = pets.find_one({"attributes": {"$elemMatch": {"name": name, "value": attribute['value']}}})
+            for attribute in mongo.attribute_collection.find({"name": name}):
+                pet = mongo.pet_collection.find_one(
+                    {"attributes": {"$elemMatch": {"name": name, "value": attribute['value']}}})
                 xml = self.get_pet_svg_xml(pet['petUrl'])
                 print('{0} {1}'.format(name, attribute['value']))
                 print(xml)
@@ -334,5 +329,5 @@ class Svg(LaiCiGou):
 
 if __name__ == '__main__':
     svg = Svg(cookie)
-    log(svg._compare_body_shape('2000528696277494352', '2000526840851553075'))
+    logger.info(svg._compare_body_shape('2000528696277494352', '2000526840851553075'))
     svg.get_xmls()

@@ -3,14 +3,14 @@ from datetime import datetime
 from datetime import timedelta
 import pymongo
 import json
+import app.db.mongo as mongo
+import app.logger.logger as logger
+from app.config.cfg import COOKIE as cookie
 from flask import render_template
 from flask import Flask, request
 from app.order import Order
-from cfg import COOKIE as cookie
-from logger import log
 from counter import Counter
 from lai_ci_gou import LaiCiGou
-from app.db.mongo import db
 
 app = Flask(__name__)
 
@@ -18,12 +18,6 @@ app = Flask(__name__)
 class LaiCiGouWebManager(LaiCiGou):
     def __init__(self, cookie):
         super(LaiCiGouWebManager, self).__init__(cookie)
-
-        self.pet_coll = db['pets']
-        self.attribute_coll = db['attributes']
-        self.breed_prob_coll = db['breed_probability']
-        self.order_coll = db['orders']
-        self.calculus_coll = db['calculus']
 
     def show_user_profile(username):
         return 'User %s' % username
@@ -41,7 +35,7 @@ class LaiCiGouWebManager(LaiCiGou):
         # 按稀有度统计狗狗数据
         pets_data = {'text': '狗狗（稀有度）', 'data': []}
         for rare_degree in rare_degrees:
-            count = self.pet_coll.find({'rareDegree': rare_degree}).count()
+            count = mongo.pet_collection.find({'rareDegree': rare_degree}).count()
             pets_data['data'].append({'name': rare_degree, 'value': count})
 
         results['results'].append(pets_data)
@@ -49,7 +43,7 @@ class LaiCiGouWebManager(LaiCiGou):
         # 按稀有属性数量统计勾过数据
         rare_amount_data = {'text': '狗狗（稀有数）', 'data': []}
         for rare_amount in rare_amounts:
-            count = self.pet_coll.find({'rareAmount': rare_amount}).count()
+            count = mongo.pet_collection.find({'rareAmount': rare_amount}).count()
             rare_amount_data['data'].append({'name': rare_amounts[rare_amount], 'value': count})
 
         results['results'].append(rare_amount_data)
@@ -57,7 +51,7 @@ class LaiCiGouWebManager(LaiCiGou):
         # 统计所有属性数据
         for attribute_name in attributes_names:
             attributes_data = {'text': attribute_name, 'data': []}
-            for attribute_data in self.attribute_coll.find({'name': attribute_name}):
+            for attribute_data in mongo.attribute_collection.find({'name': attribute_name}):
                 name = attribute_data['value'] if not attribute_data['rareDegree'] else '{0}({1})'.format(
                     attribute_data['value'],
                     attribute_data['rareDegree'])
@@ -68,7 +62,7 @@ class LaiCiGouWebManager(LaiCiGou):
         return json.dumps(results)
 
     def _get_oldest_order_trans_date(self):
-        for order in self.order_coll.find({'txnStatus': 2}).sort([("transDate", pymongo.ASCENDING)]):
+        for order in mongo.order_collection.find({'txnStatus': 2}).sort([("transDate", pymongo.ASCENDING)]):
             return order['transDate']
 
     def _days_between_dates(self, date1, date2):
@@ -89,7 +83,7 @@ class LaiCiGouWebManager(LaiCiGou):
         for day in range(days + 1):
             date = (from_date + timedelta(days=day)).strftime('%Y-%m-%d')
             income, expend, amount = 0, 0, 0
-            for order in self.order_coll.find({'transDate': date, 'txnStatus': 2}):
+            for order in mongo.order_collection.find({'transDate': date, 'txnStatus': 2}):
                 amount = float(order['amount'])
                 if order['type'] == 1 or order['type'] == 3:
                     income = round(income + amount, 2)
@@ -114,7 +108,7 @@ class LaiCiGouWebManager(LaiCiGou):
             {'dates': dates, 'incomes': incomes, 'expends': expends, 'totals': totals[::-1]})  # totals[::-1] 列表反转
 
     def get_breed_probability_data(self):
-        data = self.breed_prob_coll.find_one()
+        data = mongo.breed_prob_collection.find_one()
         results = {}
         for rare in range(9):
             rare = str(rare)

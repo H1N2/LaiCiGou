@@ -6,7 +6,7 @@ import argparse
 import random
 import os
 from captcha.image import ImageCaptcha
-from logger import log
+import app.logger.logger as logger
 import ml.captcha_recognize.config as config
 
 IMAGE_HEIGHT = config.IMAGE_HEIGHT
@@ -52,10 +52,10 @@ if __name__ == '__main__':
         help='Directory validation to generate captcha data files'
     )
     FLAGS, unparsed = parser.parse_known_args()
-    log('generate %d captchas in %s' % (TEST_SIZE, FLAGS.test_dir))
+    logger.info('generate %d captchas in %s' % (TEST_SIZE, FLAGS.test_dir))
     gen(FLAGS.test_dir, TEST_SIZE, CHARS_NUM)
-    log('generate %d captchas in %s' % (TRAIN_SIZE, FLAGS.train_dir))
+    logger.info('generate %d captchas in %s' % (TRAIN_SIZE, FLAGS.train_dir))
     gen(FLAGS.train_dir, TRAIN_SIZE, CHARS_NUM)
-    log('generate %d captchas in %s' % (VALID_SIZE, FLAGS.valid_dir))
+    logger.info('generate %d captchas in %s' % (VALID_SIZE, FLAGS.valid_dir))
     gen(FLAGS.valid_dir, VALID_SIZE, CHARS_NUM)
-    log('generate Done!')
+    logger.info('generate Done!')

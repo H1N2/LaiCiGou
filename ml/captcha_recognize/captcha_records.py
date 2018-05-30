@@ -16,7 +16,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.python.platform import gfile
 import ml.captcha_recognize.config as config
-from logger import log
+import app.logger.logger as logger
 
 IMAGE_HEIGHT = config.IMAGE_HEIGHT
 IMAGE_WIDTH = config.IMAGE_WIDTH
@@ -56,7 +56,7 @@ def conver_to_tfrecords(data_set, name):
     if not os.path.exists(RECORD_DIR):
         os.makedirs(RECORD_DIR)
     filename = os.path.join(RECORD_DIR, name)
-    log('Writing', filename)
+    logger.info('Writing', filename)
     writer = tf.python_io.TFRecordWriter(filename)
     data_set = list(data_set)
     num_examples = len(data_set)
@@ -74,21 +74,21 @@ def conver_to_tfrecords(data_set, name):
             'image_raw': _bytes_feature(image_raw)}))
         writer.write(example.SerializeToString())
     writer.close()
-    log('Writing Done!')
+    logger.info('Writing Done!')
 
 
 def create_data_list(image_dir):
     if not gfile.Exists(image_dir):
-        log("Image director '" + image_dir + "' not found.")
+        logger.info("Image director '" + image_dir + "' not found.")
         return None
     extensions = ['jpg', 'JPG', 'jpeg', 'JPEG', 'png', 'PNG']
-    log("Looking for images in '" + image_dir + "'")
+    logger.info("Looking for images in '" + image_dir + "'")
     file_list = []
     for extension in extensions:
         file_glob = os.path.join(image_dir, '*.' + extension)
         file_list.extend(gfile.Glob(file_glob))
     if not file_list:
-        log("No files found in '" + image_dir + "'")
+        logger.info("No files found in '" + image_dir + "'")
         return None
     images = []
     labels = []

@@ -2,9 +2,8 @@
 import requests
 import json
 import time
-
-from cfg import COOKIE as cookie
-from logger import log
+import app.logger.logger as logger
+from app.config.cfg import COOKIE as cookie
 
 
 class LaiCiGou:
@@ -166,4 +165,4 @@ if __name__ == '__main__':
     # total = lai_ci_gou.get_pets_count()
     # log(total)
     total = lai_ci_gou.get_idle_pets_count()
-    log(total)
+    logger.info(total)

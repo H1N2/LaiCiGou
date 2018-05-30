@@ -1,13 +1,12 @@
-from datetime import datetime
 import time
+from datetime import datetime
 
-
-def log(msg):
+def info(msg):
     t = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     print('>> {0}: {1}'.format(t, msg))
 
 
 if __name__ == '__main__':
-    log('log A')
+    info('log A')
     time.sleep(2)
-    log('log B')
+    info('log B')

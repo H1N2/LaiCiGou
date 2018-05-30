@@ -9,7 +9,7 @@ import sys
 
 import tensorflow as tf
 import ml.captcha_recognize.captcha_model as captcha
-from logger import log
+import app.logger.logger as logger
 
 FLAGS = None
 
@@ -44,14 +44,14 @@ def run_train():
                 _, loss_value = sess.run([train_op, loss])
                 duration = time.time() - start_time
                 if step % 10 == 0:
-                    log('Step %d run_train: loss = %.2f (%.3f sec)' % (step, loss_value,
+                    logger.info('Step %d run_train: loss = %.2f (%.3f sec)' % (step, loss_value,
                                                                        duration))
                 if step % 100 == 0:
-                    log('%s Saving in %s' % (datetime.now(), FLAGS.checkpoint))
+                    logger.info('%s Saving in %s' % (datetime.now(), FLAGS.checkpoint))
                     saver.save(sess, FLAGS.checkpoint, global_step=step)
                 step += 1
         except Exception as e:
-            log('%s Saving in %s' % (datetime.now(), FLAGS.checkpoint))
+            logger.info('%s Saving in %s' % (datetime.now(), FLAGS.checkpoint))
             saver.save(sess, FLAGS.checkpoint, global_step=step)
             coord.request_stop(e)
         finally:

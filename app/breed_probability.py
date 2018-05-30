@@ -1,25 +1,23 @@
 # coding = utf-8
 
 import copy
-from logger import log
-from app.db.mongo import db
+import app.db.mongo as mongo
+import app.logger.logger as logger
 
 
 # 统计狗狗及双亲稀有属性数量之间的关系
 def count_breed_data():
-    pets = db['pets']
-    breed_prob = db['breed_probability']
     results = {}
     index = 0
-    total1 = pets.find().count()
-    total = pets.find({'fatherId': {'$ne': None}}).count()
+    total1 = mongo.pet_collection.find().count()
+    total = mongo.pet_collection.find({'fatherId': {'$ne': None}}).count()
 
     # 设置no_cursor_timeout为真，避免处理时间过长报错：pymongo.errors.CursorNotFound: Cursor not found, cursor id: xxxxxxxxx
-    cursor = pets.find({'fatherId': {'$ne': None}}, no_cursor_timeout=True)
+    cursor = mongo.pet_collection.find({'fatherId': {'$ne': None}}, no_cursor_timeout=True)
     for pet in cursor:
         index = index + 1
-        father = pets.find_one({'petId': pet['fatherId']})
-        mother = pets.find_one({'petId': pet['motherId']})
+        father = mongo.pet_collection.find_one({'petId': pet['fatherId']})
+        mother = mongo.pet_collection.find_one({'petId': pet['motherId']})
         if not father or not mother:
             continue
 
@@ -40,17 +38,17 @@ def count_breed_data():
             results[rare_amount] = [{key: 1}]
 
         if index % 100 == 0:
-            log('一共 {0} 条狗狗，已统计处理 {1} 条'.format(total, index))
+            logger.info('一共 {0} 条狗狗，已统计处理 {1} 条'.format(total, index))
 
         if index % 10000 == 0:
             new_results = copy.deepcopy(results)
             new_results['no'] = index / 10000
-            breed_prob.insert(new_results)
+            mongo.breed_prob_collection.insert(new_results)
     cursor.close()
 
     new_results = copy.deepcopy(results)
     new_results['no'] = index / 10000
-    breed_prob.insert(new_results)
+    mongo.breed_prob_collection.insert(new_results)
 
 
 if __name__ == '__main__':

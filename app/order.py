@@ -2,18 +2,15 @@
 import requests
 import json
 import time
-from cfg import COOKIE as cookie
-from logger import log
+import app.db.mongo as mongo
+import app.logger.logger as logger
+from app.config.cfg import COOKIE as cookie
 from lai_ci_gou import LaiCiGou
-from app.db.mongo import db
 
 
 class Order(LaiCiGou):
     def __init__(self, cookie, clear=True):
         super(Order, self).__init__(cookie)
-
-        self.orders = db['orders']
-        self.calculus_coll = db['calculus']
 
         self.status = {
             1: "已卖出",
@@ -32,11 +29,11 @@ class Order(LaiCiGou):
 
         if (clear):
             # 查询保存前先清掉所有数据
-            log('强制更新数据，清除所有记录')
-            self.orders.delete_many({})
+            logger.info('强制更新数据，清除所有记录')
+            mongo.order_collection.delete_many({})
             # 清除微积分数据
-            log('强制更新数据，清除微积分总数记录')
-            self.calculus_coll.delete_many({})
+            logger.info('强制更新数据，清除微积分总数记录')
+            mongo.calculus_collection.delete_many({})
 
     # 获取当前微积分总数
     def get_save_latest_calculus(self):
@@ -50,7 +47,7 @@ class Order(LaiCiGou):
         }
         r = requests.post(url, headers=headers, data=json.dumps(data))
         response = json.loads(r.content)
-        self.calculus_coll.insert({'amount': float(response['data']['amount'])})
+        mongo.calculus_collection.insert({'amount': float(response['data']['amount'])})
         return float(response['data']['amount'])
 
     # 获取账号交易历史记录数据
@@ -81,7 +78,7 @@ class Order(LaiCiGou):
 
     # 保存交易记录简略信息
     def save_order(self, order):
-        self.orders.insert({
+        mongo.order_collection.insert({
             "amount": order['amount'],
             "type": order['status'],
             'txnStatus': order['txnStatus'],
@@ -98,7 +95,7 @@ class Order(LaiCiGou):
             orders = self.get_order_list(page_no, page_size, pages, total)
             for order in orders:
                 self.save_order(order)
-                log('保存订单：{0} {1} 微积分 状态 {2}'.format(self.status[order['status']], order['amount'],
+                logger.info('保存订单：{0} {1} 微积分 状态 {2}'.format(self.status[order['status']], order['amount'],
                                                      self.txnStatus[order['txnStatus']]))
             time.sleep(1)
 

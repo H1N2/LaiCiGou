@@ -5,7 +5,6 @@ from __future__ import print_function
 import argparse
 import sys
 import os.path
-from datetime import datetime
 from PIL import Image
 import numpy as np
 
@@ -16,7 +15,7 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 import tensorflow as tf
 from tensorflow.python.platform import gfile
 import ml.captcha_recognize.captcha_model as captcha
-from logger import log
+import app.logger.logger as logger
 import ml.captcha_recognize.config as config
 
 IMAGE_WIDTH = config.IMAGE_WIDTH
@@ -39,16 +38,16 @@ def one_hot_to_texts(recog_result):
 
 def input_data(image_dir):
     if not gfile.Exists(image_dir):
-        log("Image director '" + image_dir + "' not found.")
+        logger.info("Image director '" + image_dir + "' not found.")
         return None
     extensions = ['jpg', 'JPG', 'jpeg', 'JPEG', 'png', 'PNG']
-    log("Looking for images in '" + image_dir + "'")
+    logger.info("Looking for images in '" + image_dir + "'")
     file_list = []
     for extension in extensions:
         file_glob = os.path.join(image_dir, '*.' + extension)
         file_list.extend(gfile.Glob(file_glob))
     if not file_list:
-        log("No files found in '" + image_dir + "'")
+        logger.info("No files found in '" + image_dir + "'")
         return None
     batch_size = len(file_list)
     images = np.zeros([batch_size, IMAGE_HEIGHT * IMAGE_WIDTH], dtype='float32')
@@ -71,25 +70,25 @@ def input_data(image_dir):
 def run_predict():
     with tf.Graph().as_default(), tf.device('/cpu:0'):
         input_images, input_filenames = input_data(FLAGS.captcha_dir)
-        log(input_filenames)
+        logger.info(input_filenames)
         images = tf.constant(input_images)
         logits = captcha.inference(images, keep_prob=1)
         result = captcha.output(logits)
         saver = tf.train.Saver()
         sess = tf.Session()
         saver.restore(sess, tf.train.latest_checkpoint(FLAGS.checkpoint_dir))
-        log(tf.train.latest_checkpoint(FLAGS.checkpoint_dir))
+        logger.info(tf.train.latest_checkpoint(FLAGS.checkpoint_dir))
         recog_result = sess.run(result)
         sess.close()
         text = one_hot_to_texts(recog_result)
         total_count = len(input_filenames)
         true_count = 0.
         for i in range(total_count):
-            log('image ' + input_filenames[i] + " recognize ----> '" + text[i] + "'")
+            logger.info('image ' + input_filenames[i] + " recognize ----> '" + text[i] + "'")
             if text[i] in input_filenames[i]:
                 true_count += 1
         precision = true_count / total_count
-        log('true/total: %d/%d recognize @ 1 = %.3f' % (true_count, total_count, precision))
+        logger.info('true/total: %d/%d recognize @ 1 = %.3f' % (true_count, total_count, precision))
 
 
 def main(_):

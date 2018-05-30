@@ -9,7 +9,7 @@ import sys
 
 import numpy as np
 import tensorflow as tf
-from logger import log
+import app.logger.logger as logger
 import ml.captcha_recognize.captcha_model as captcha
 
 FLAGS = None
@@ -76,11 +76,11 @@ def run_train():
 
                 format_str = ('%s: step %d, loss = %.2f (%.1f examples/sec; %.3f '
                               'sec/batch)')
-                log(format_str % (datetime.now(), step, loss_value,
+                logger.info(format_str % (datetime.now(), step, loss_value,
                                   examples_per_sec, sec_per_batch))
 
             if step % 1000 == 0 or (step + 1) == FLAGS.max_steps:
-                log('%s Saving in %s' % (datetime.now(), FLAGS.checkpoint))
+                logger.info('%s Saving in %s' % (datetime.now(), FLAGS.checkpoint))
                 saver.save(sess, FLAGS.checkpoint, global_step=step)
 
 

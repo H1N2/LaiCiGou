@@ -2,9 +2,8 @@
 import requests
 import json
 import time
-
-from cfg import COOKIE as cookie
-from logger import log
+import app.logger.logger as logger
+from app.config.cfg import COOKIE as cookie
 from lai_ci_gou import LaiCiGou
 from app.attr_parser import AttributeSvgParser
 
@@ -67,7 +66,7 @@ class Counter(LaiCiGou):
                     rare_degree_amount_data[key] = 1
 
             sorted_rare_degree_amount_data = self.attribute_svg_parser.svg.ordered(rare_degree_amount_data)
-            log('第{0}页时：{1} {2}'.format(page_no, rare_degree_data, sorted_rare_degree_amount_data))
+            logger.info('第{0}页时：{1} {2}'.format(page_no, rare_degree_data, sorted_rare_degree_amount_data))
             time.sleep(5)
 
     def get_attribute_value(self, attributes, name):
@@ -88,10 +87,10 @@ class Counter(LaiCiGou):
 
             if flag:
                 exist_type['petIds'].append(info['petId'])
-                log('有相同类型的狗狗')
+                logger.info('有相同类型的狗狗')
                 return
 
-        log('没有相同类型的狗狗')
+        logger.info('没有相同类型的狗狗')
         t = {
             'petIds': [info['petId']],
             'attributes': info['attributes']
@@ -106,13 +105,13 @@ class Counter(LaiCiGou):
         pages = total // page_size if total % page_size == 0 else (total // page_size + 1)
         for page_no in range(pages):
             page_no = page_no + 1
-            log('第{0}页：'.format(page_no))
+            logger.info('第{0}页：'.format(page_no))
             pets = self.get_pets(page_no, page_size, pages, total)
             for pet in pets:
                 info = self.get_pet_info_on_market(pet['petId'])
                 self.check_attributes(info)
             time.sleep(5)
-        log(self.types)
+        logger.info(self.types)
 
     # 统计指定稀有属性数量的狗狗
     def get_pets_of_rare_degree(self, rare_num):
@@ -130,7 +129,7 @@ class Counter(LaiCiGou):
                 if pet_rare_num == rare_num:
                     pets_list.append({'petId': pet['petId'], 'isCooling': pet['isCooling']})
 
-            log('第{0}页时：{1}'.format(page_no, pets_list))
+            logger.info('第{0}页时：{1}'.format(page_no, pets_list))
             time.sleep(5)
 
     # 获取狗宝宝基本信息数据
@@ -182,7 +181,7 @@ class Counter(LaiCiGou):
                 rare_degree = self.get_baby_rage_degree(baby_id)
                 details[baby_id] = self.rare_degree_dic[rare_degree]
                 rare_degree = self.rare_degree_dic[rare_degree]
-                log('狗蛋：{0} 稀有度：{1}'.format(baby_id, rare_degree))
+                logger.info('狗蛋：{0} 稀有度：{1}'.format(baby_id, rare_degree))
 
                 if rare_degree in summary:
                     summary[rare_degree] = summary[rare_degree] + 1
@@ -190,11 +189,11 @@ class Counter(LaiCiGou):
                     summary[rare_degree] = 1
 
                 attributes_details = self.get_baby_attribute_details(baby_id)
-                log('狗蛋 {0} 详细属性识别：{1}'.format(baby_id, attributes_details))
+                logger.info('狗蛋 {0} 详细属性识别：{1}'.format(baby_id, attributes_details))
             time.sleep(5)
 
-        log('概况：{0}'.format(summary))
-        log('详细：{0}'.format(details))
+        logger.info('概况：{0}'.format(summary))
+        logger.info('详细：{0}'.format(details))
 
 
 if __name__ == '__main__':

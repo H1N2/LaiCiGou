@@ -2,13 +2,12 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from datetime import datetime
 import argparse
 import sys
 import math
 
 import tensorflow as tf
-from logger import log
+import app.logger.logger as logger
 
 import ml.captcha_recognize.captcha_model as captcha
 
@@ -31,15 +30,15 @@ def run_eval():
             total_true_count = 0
             total_sample_count = num_iter * FLAGS.batch_size
             step = 0
-            log('loop: %d, total_sample_count: %d' % (num_iter, total_sample_count))
+            logger.info('loop: %d, total_sample_count: %d' % (num_iter, total_sample_count))
             while step < num_iter and not coord.should_stop():
                 true_count = sess.run(eval_correct)
                 total_true_count += true_count
                 precision = true_count / FLAGS.batch_size
-                log('Step %d: true/total: %d/%d precision @ 1 = %.3f' % (step, true_count, FLAGS.batch_size, precision))
+                logger.info('Step %d: true/total: %d/%d precision @ 1 = %.3f' % (step, true_count, FLAGS.batch_size, precision))
                 step += 1
             precision = total_true_count / total_sample_count
-            log('true/total: %d/%d precision @ 1 = %.3f' % (total_true_count, total_sample_count, precision))
+            logger.info('true/total: %d/%d precision @ 1 = %.3f' % (total_true_count, total_sample_count, precision))
         except Exception as e:
             coord.request_stop(e)
         finally:

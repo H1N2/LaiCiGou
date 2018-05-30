@@ -7,8 +7,8 @@ import time
 import os
 import traceback
 
-from logger import log
-from cfg import COOKIE as cookie
+import app.logger.logger as logger
+from app.config.cfg import COOKIE as cookie
 # from ml.captcha_crack_baidu.captcha_crack import Crack
 from ml.captcha_recognize.captcha_recognize_new import Crack
 
@@ -36,7 +36,7 @@ class Gather:
         if os.path.exists(self.correct_amount_file):
             file = open(self.correct_amount_file, 'r')
             amount = file.read()
-            log('当前验证码数量：{}'.format(amount))
+            logger.info('当前验证码数量：{}'.format(amount))
             file.close()
 
             self.correct_captcha_amount = int(amount)
@@ -46,7 +46,7 @@ class Gather:
         if os.path.exists(self.fail_amount_file):
             file = open(self.fail_amount_file, 'r')
             amount = file.read()
-            log('当前验证码数量：{}'.format(amount))
+            logger.info('当前验证码数量：{}'.format(amount))
             file.close()
 
             self.fail_captcha_amount = int(amount)
@@ -55,11 +55,11 @@ class Gather:
 
         if not os.path.exists(self.correct_captcha_folder):
             os.makedirs(self.correct_captcha_folder)
-            log('创建文件夹：' + self.correct_captcha_folder)
+            logger.info('创建文件夹：' + self.correct_captcha_folder)
 
         if not os.path.exists(self.fail_captcha_folder):
             os.makedirs(self.fail_captcha_folder)
-            log('创建文件夹：' + self.fail_captcha_folder)
+            logger.info('创建文件夹：' + self.fail_captcha_folder)
 
         self.headers_template = {
             'Accept-Language': 'en-US,en;q=0.9,zh-CN;q=0.8,zh-TW;q=0.7,zh;q=0.6',
@@ -141,7 +141,7 @@ class Gather:
         file.write(img)
 
         file.close()
-        log('保存正确验证码：' + file_name)
+        logger.info('保存正确验证码：' + file_name)
 
     def save_fail_captcha_amount(self):
         file = open(self.fail_amount_file, 'w')
@@ -157,16 +157,16 @@ class Gather:
         file.write(img)
 
         file.close()
-        log('保存错误验证码：' + file_name)
+        logger.info('保存错误验证码：' + file_name)
 
     def gather_captcha(self, pet_id, amount):
         seed, img = self.get_captcha(pet_id)
         captcha = self.crack.predict(img)
 
-        log('输入预测验证码:' + captcha)
+        logger.info('输入预测验证码:' + captcha)
         valid, correct, err = self.check_captcha(pet_id, amount, seed, captcha)
         if not valid:
-            log(err)
+            logger.info(err)
             return
 
         self.total += 1
@@ -179,7 +179,7 @@ class Gather:
             self.save_fail_captcha_amount()
             self.fail += 1
 
-        log('总数 ' + str(self.total) + " 正确 " + str(self.correct) + ' 准确率：' + str(self.correct / self.total))
+        logger.info('总数 ' + str(self.total) + " 正确 " + str(self.correct) + ' 准确率：' + str(self.correct / self.total))
 
     def gather_captchas(self, pet_id, amount, times=99999999999):
         for i in range(times):

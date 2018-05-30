@@ -7,8 +7,8 @@ import time
 import os
 import traceback
 
-from logger import log
-from cfg import COOKIE as cookie
+import app.logger.logger as logger
+from app.config.cfg import COOKIE as cookie
 
 
 class Download:
@@ -30,7 +30,7 @@ class Download:
         if os.path.exists(self.amount_file):
             file = open(self.amount_file, 'r')
             amount = file.read()
-            log('当前验证码数量：{}'.format(amount))
+            logger.info('当前验证码数量：{}'.format(amount))
             file.close()
 
             self.captcha_id = int(amount)
@@ -41,7 +41,7 @@ class Download:
 
         if not os.path.exists(self.captcha_dir):
             os.makedirs(self.captcha_dir)
-            log('创建文件夹：' + self.captcha_dir)
+            logger.info('创建文件夹：' + self.captcha_dir)
 
     def get(self, pet_id):
         """
@@ -59,7 +59,7 @@ class Download:
         }
         r = requests.post(url, headers=headers, data=json.dumps(data))
         response = json.loads(r.content)
-        log(response)
+        logger.info(response)
         return response['data']['img']
 
     def save(self, base64_img_str):
@@ -74,7 +74,7 @@ class Download:
         img = base64.b64decode(base64_img_str)
         file.write(img)
         file.close()
-        log('保存验证码：' + file_name)
+        logger.info('保存验证码：' + file_name)
 
     def download_captchas(self, amount):
         """

@@ -2,9 +2,8 @@
 import requests
 import json
 import time
-
-from cfg import COOKIE as cookie
-from logger import log
+import app.logger.logger as logger
+from app.config.cfg import COOKIE as cookie
 from lai_ci_gou import LaiCiGou
 
 
@@ -30,11 +29,11 @@ class Sign(LaiCiGou):
         r = requests.post(url, headers=headers, data=json.dumps(data))
         response = json.loads(r.content)
         if response['errorNo'] != '00':
-            log('签到失败：{0}'.format(response['errorMsg']))
+            logger.info('签到失败：{0}'.format(response['errorMsg']))
 
         info = response['data']
         if info['isSigned']:
-            log('已签到，获得{0}微，签到次数{1} 累计{2}微'.format(info['signAmount'], info['totalSignTimes'], info['totalSignAmount']))
+            logger.info('已签到，获得{0}微，签到次数{1} 累计{2}微'.format(info['signAmount'], info['totalSignTimes'], info['totalSignAmount']))
 
 
 if __name__ == '__main__':

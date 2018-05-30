@@ -12,7 +12,7 @@ from PIL import ImageFile
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
-from logger import log
+import app.logger.logger as logger
 
 # 当前文件所在目录
 root_path = os.path.split(os.path.realpath(__file__))[0]
@@ -21,14 +21,14 @@ root_path = os.path.split(os.path.realpath(__file__))[0]
 MODEL_PATH = root_path + '/models/'
 
 CHAR_SET_LEN = len(CHAR_SET)
-log("验证码文本集合长度 {0} 集合：{1}".format(CHAR_SET_LEN, CHAR_SET))
+logger.info("验证码文本集合长度 {0} 集合：{1}".format(CHAR_SET_LEN, CHAR_SET))
 
 CAPTCHA_TEXT, IMAGE = gen_captcha()
-log("验证码图像channel: {0}".format(IMAGE.shape))  # (60, 160, 3)
+logger.info("验证码图像channel: {0}".format(IMAGE.shape))  # (60, 160, 3)
 #  图像大小
 IMAGE_HEIGHT, IMAGE_WIDTH, a = IMAGE.shape
 CAPTCHA_TEXT_LEN = len(CAPTCHA_TEXT)
-log("验证码文本字符数 ".format(CAPTCHA_TEXT_LEN))  # 验证码最长4字符
+logger.info("验证码文本字符数 ".format(CAPTCHA_TEXT_LEN))  # 验证码最长4字符
 
 ####################################################################
 X = tf.placeholder(tf.float32, [None, IMAGE_HEIGHT * IMAGE_WIDTH])
@@ -88,13 +88,13 @@ def vec2text(vec):
 # 向量（大小MAX_CAPTCHA*CHAR_SET_LEN）用0,1编码 每63个编码一个字符，这样顺利有，字符也有
 def test_vec_text():
     vec = text2vec("Fdfd")
-    log(vec)
+    logger.info(vec)
     text = vec2text(vec)
-    log(text)  # Fdfd
+    logger.info(text)  # Fdfd
     vec = text2vec("Fdhd")
-    log(vec)
+    logger.info(vec)
     text = vec2text(vec)
-    log(text)  # Fdhd
+    logger.info(text)  # Fdhd
 
 
 # 生成一个训练batch
@@ -179,13 +179,13 @@ def train_crack_captcha_cnn():
         while True:
             batch_x, batch_y = get_next_batch(64)
             _, loss_ = sess.run([optimizer, loss], feed_dict={X: batch_x, Y: batch_y, keep_prob: 0.75})
-            log(step, loss_)
+            logger.info(step, loss_)
 
             # 每100 step计算一次准确率
             if step % 100 == 0:
                 batch_x_test, batch_y_test = get_next_batch(100)
                 acc = sess.run(accuracy, feed_dict={X: batch_x_test, Y: batch_y_test, keep_prob: 1.})
-                log(step, acc)
+                logger.info(step, acc)
                 # 如果准确率大于90%,保存模型,完成训练
                 if acc > 0.95:
                     saver.save(sess, MODEL_PATH + 'crack_capcha.model', global_step=step)
@@ -226,8 +226,8 @@ def test_crack_captcha(count):
         predict_text = crack_captcha(image, output, saver)
         if text.lower() == predict_text.lower():
             correct = correct + 1
-        log("正确: {}  预测: {}".format(text, predict_text))
-        log('总数 ' + str(i) + " 正确 " + str(correct) + ' 准确率：' + str(correct / (i + 1)))
+        logger.info("正确: {}  预测: {}".format(text, predict_text))
+        logger.info('总数 ' + str(i) + " 正确 " + str(correct) + ' 准确率：' + str(correct / (i + 1)))
 
 
 # 测试批量识别验证码，验证码图像从data文件夹中加载
@@ -248,11 +248,11 @@ def test_crack_captcha_from_disk():
                 predict_text = crack_captcha(image_data, output, saver)
                 if text.lower() == predict_text.lower():
                     correct = correct + 1
-                    log('正确 ' + str(correct))
+                    logger.info('正确 ' + str(correct))
                 total = total + 1
-                log("正确: {}  预测: {}".format(text, predict_text))
+                logger.info("正确: {}  预测: {}".format(text, predict_text))
 
-    log('总数 ' + str(total) + " 正确 " + str(correct) + ' 准确率：' + str(correct / total))
+    logger.info('总数 ' + str(total) + " 正确 " + str(correct) + ' 准确率：' + str(correct / total))
 
 
 if __name__ == '__main__':

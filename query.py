@@ -7,12 +7,11 @@ import time
 import traceback
 import matplotlib.pyplot as plt
 import numpy as np
+import app.logger.logger as logger
 from pylab import mpl
 from scipy.interpolate import spline
 from datetime import datetime
-
-from cfg import COOKIE as cookie
-from logger import log
+from app.config.cfg import COOKIE as cookie
 from lai_ci_gou import LaiCiGou
 
 
@@ -24,7 +23,7 @@ class Query(LaiCiGou):
 
         if not os.path.exists('charts'):
             os.makedirs('charts')
-            log('创建文件夹：' + 'charts')
+            logger.info('创建文件夹：' + 'charts')
 
     def get_pets_with_condition(self, rare_degree):
         url = 'https://pet-chain.baidu.com/data/market/queryPetsOnSale'
@@ -113,7 +112,7 @@ class Query(LaiCiGou):
                 #     if last_lowest_price_pet['petId'] != pet['petId']:
                 #         self.lowest_price_pets.append(pet)
 
-                log('最低价狗狗： petId {0}, 代数 {1}, 价格 {2}'.format(pet['petId'], pet['generation'], pet['price']))
+                logger.info('最低价狗狗： petId {0}, 代数 {1}, 价格 {2}'.format(pet['petId'], pet['generation'], pet['price']))
 
                 if i % 100 == 0:
                     self.draw_chart()

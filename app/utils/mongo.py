@@ -1,8 +1,8 @@
 # coding = utf-8
 
+import app.db.mongo as mongo
 from pymongo import MongoClient
-from logger import log
-from app.db.mongo import db
+import app.logger.logger as logger
 
 
 # 统计属性中的稀有属性数量
@@ -17,42 +17,37 @@ def get_rare_amount(attributes):
 
 # 更新旧数据，增加稀有属性数量统计字段
 def update_rare_amount():
-    client = MongoClient()
-    db = client['lai_ci_gou']
-    pets = db['pets']
     count = 0
-    for pet in pets.find():
+    for pet in mongo.pet_collection.find():
         count = count + 1
-        log('{0}：更新 {1}'.format(count, pet['petId']))
-        pets.update_one({'_id': pet['_id']}, {'$set': {'rareAmount': get_rare_amount(pet['attributes'])}}, upsert=False)
+        logger.info('{0}：更新 {1}'.format(count, pet['petId']))
+        mongo.pet_collection.update_one({'_id': pet['_id']},
+                                        {'$set': {'rareAmount': get_rare_amount(pet['attributes'])}}, upsert=False)
 
 
 # 检查是否有重复入库的狗狗
 def check_duplicate_pet():
-    client = MongoClient()
-    db = client['lai_ci_gou']
-    pets = db['pets']
     duplicate = []
     index = 0
-    for pet in pets.find():
+    for pet in mongo.pet_collection.find():
         index = index + 1
-        count = pets.find({'petId': pet['petId']}).count()
+        count = mongo.pet_collection.find({'petId': pet['petId']}).count()
         if count > 1:
             duplicate.append(pet['petId'])
-            log('检查第 {0} 条狗狗 {1} ：有重复'.format(index, pet['petId']))
+            logger.info('检查第 {0} 条狗狗 {1} ：有重复'.format(index, pet['petId']))
         else:
-            log('检查第 {0} 条狗狗 {1} ：无重复'.format(index, pet['petId']))
+            logger.info('检查第 {0} 条狗狗 {1} ：无重复'.format(index, pet['petId']))
 
-    log(duplicate)
+    logger.info(duplicate)
 
 
-# 统计狗狗及双亲稀有属性数量之间的关系
+# 数据库collection拷贝：本地到远程
 def db_copy(name):
     src_client = MongoClient()
     src_db = src_client['lai_ci_gou']
     src_coll = src_db[name]
 
-    des_db = db
+    des_db = mongo.db
     des_coll = des_db[name]
 
     index = 0
@@ -63,8 +58,8 @@ def db_copy(name):
         index = index + 1
         des_coll.insert(document)
         if index % 100 == 0:
-            log('一共 {0} 份文档，已迁移 {1} 条'.format(total, index))
-    log('一共 {0} 份文档，已迁移 {1} 条'.format(total, index))
+            logger.info('一共 {0} 份文档，已迁移 {1} 条'.format(total, index))
+    logger.info('一共 {0} 份文档，已迁移 {1} 条'.format(total, index))
 
     cursor.close()
 
@@ -72,4 +67,4 @@ def db_copy(name):
 if __name__ == '__main__':
     # check_duplicate_pet()
     # update_rare_amount()
-    db_copy('pets')
+    pass

@@ -1,28 +1,27 @@
 import schedule
 import time
 import traceback
-
+import app.logger.logger as logger
 from shelf import Shelf
 from breed import Breed
 from sale import Sale
 from buy import Buy
-from cfg import COOKIE as cookie
-from logger import log
+from app.config.cfg import COOKIE as cookie
 
 
 def sale():
-    log('启动卖出定时任务')
+    logger.info('启动卖出定时任务')
     sale = Sale(cookie)
     try:
         sale.sale_all(100, 0)
         sale.sale_all(100, 1)
     except:
         traceback.print_exc()
-    log('卖出定时任务执行完成')
+    logger.info('卖出定时任务执行完成')
 
 
 def shelf():
-    log('启动挂出繁育定时任务')
+    logger.info('启动挂出繁育定时任务')
     shelf = Shelf(cookie)
     try:
         # rare_num_price_dic = {0: 100, 1: 100, 2: 100, 3: 100, 4: 500, 5: 10000}
@@ -33,18 +32,18 @@ def shelf():
         shelf.shelf_by_rare_nums_once(rare_num_price_dic)
     except:
         traceback.print_exc()
-    log('挂出繁育定时任务执行完成')
+    logger.info('挂出繁育定时任务执行完成')
 
 
 def breed():
-    log('启动内部繁育定时任务')
+    logger.info('启动内部繁育定时任务')
     breed = Breed(cookie)
     breed.breed_until_max_trade_times(5, 2000, 5)
-    log('内部繁育定时任务执行完成')
+    logger.info('内部繁育定时任务执行完成')
 
 
 def buy1():
-    log('启动购买定时任务')
+    logger.info('启动购买定时任务')
     buy = Buy(cookie)
     # 购买卓越狗 价格不高于200
     # buy.buy_angel_pets_until_max_trade_times(200)
@@ -52,11 +51,11 @@ def buy1():
     buy.buy_pets_until_max_trade_times(160, 2, 2, 10)
     # 购买史诗狗 价格不高于2500， 代数不高于3代，数量不超过5条
     buy.buy_pets_until_max_trade_times(2500, 3, 3, 5)
-    log('购买定时任务执行完成')
+    logger.info('购买定时任务执行完成')
 
 
 def buy2():
-    log('启动购买定时任务')
+    logger.info('启动购买定时任务')
     buy = Buy(cookie)
     # 购买卓越狗 价格不高于200
     # buy.buy_angel_pets_until_max_trade_times(200)
@@ -64,7 +63,7 @@ def buy2():
     # buy.buy_pets_until_max_trade_times(160, 2, 2, 10)
     # 购买史诗狗 价格不高于2500， 代数不高于3代，数量不超过5条
     buy.buy_pets_until_max_trade_times(2500, 3, 3, 5)
-    log('购买定时任务执行完成')
+    logger.info('购买定时任务执行完成')
 
 
 if __name__ == '__main__':

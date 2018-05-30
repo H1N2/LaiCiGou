@@ -3,11 +3,11 @@ import requests
 import json
 import time
 import xmltodict
-from cfg import COOKIE as cookie
-from logger import log
+import app.db.mongo as mongo
+import app.logger.logger as logger
+from app.config.cfg import COOKIE as cookie
 from lai_ci_gou import LaiCiGou
 from app.utils.svg import Svg
-from app.db.mongo import db
 
 
 class AttributeSvgParser(LaiCiGou):
@@ -16,16 +16,26 @@ class AttributeSvgParser(LaiCiGou):
 
         self.svg = Svg(cookie)
 
-        self.attribute_svgs = db['attribute_svg']
-
         if (clear):
             # 查询保存前先清掉所有数据
-            log('强制更新数据，清除所有记录')
-            self.attribute_svgs.delete_many({})
+            logger.info('强制更新数据，清除所有记录')
+            self._clear_svg_values()
 
         self.predict_results = {}
 
         self.predict_fail = []
+
+    # 清除所有svg Value
+    def _clear_svg_values(self):
+        cursor = mongo.attribute_collection.find()
+        for doc in cursor:
+            mongo.attribute_collection.update_one({
+                '_id': doc['_id']
+            }, {
+                '$set': {
+                    'svgValue': None
+                }
+            }, upsert=False)
 
     def get_pets_on_sale(self, page_no, rare_degree):
         url = 'https://pet-chain.baidu.com/data/market/queryPetsOnSale'
@@ -76,9 +86,9 @@ class AttributeSvgParser(LaiCiGou):
     # 保存或者更新属性数据
     def save_update_attribute(self, attributes, name, svg_value):
         attribute = self.get_attribute(attributes, name)
-        exist = self.attribute_svgs.find_one(attribute)
+        exist = mongo.attribute_collection.find_one(attribute)
         if exist:
-            self.attribute_svgs.update_one({
+            mongo.attribute_collection.update_one({
                 '_id': exist['_id']
             }, {
                 '$set': {
@@ -86,8 +96,9 @@ class AttributeSvgParser(LaiCiGou):
                 }
             }, upsert=False)
         else:
+            attribute['amount'] = 0
             attribute['svgValue'] = svg_value
-            self.attribute_svgs.insert(attribute)
+            mongo.attribute_collection.insert(attribute)
 
     # 按指定稀有度查询狗狗，包括售卖的和挂出繁育的
     def get_save_pet_svg_criteria(self, rare_degree):
@@ -96,7 +107,7 @@ class AttributeSvgParser(LaiCiGou):
         sample_count = 0
         for page_no in range(max_page_no):
             page_no = page_no + 1
-            log('第{0}页{1}狗狗'.format(page_no, self.rare_degree_dic[rare_degree]))
+            logger.info('第{0}页{1}狗狗'.format(page_no, self.rare_degree_dic[rare_degree]))
             # 获取市场上售卖的狗狗
             pets_on_sale = self.get_pets_on_sale(page_no, rare_degree)
             # 获取市场上繁育的狗狗
@@ -105,7 +116,7 @@ class AttributeSvgParser(LaiCiGou):
             pets = pets_on_sale + pets_on_breed
             for pet in pets:
                 pet_id = pet['petId']
-                log('第 {0} 个样本 {1}'.format(sample_count, pet_id))
+                logger.info('第 {0} 个样本 {1}'.format(sample_count, pet_id))
                 sample_count = sample_count + 1
                 info = self.get_pet_info_on_market(pet_id)
 
@@ -160,7 +171,7 @@ class AttributeSvgParser(LaiCiGou):
         elif name == '眼睛':
             svg_value = self.svg.get_eye_shape(svg_json)
 
-        attribute = self.attribute_svgs.find_one({'name': name, 'svgValue': svg_value})
+        attribute = mongo.attribute_collection.find_one({'name': name, 'svgValue': svg_value})
 
         value = attribute['value'] if attribute else None
         rare_degree = ''
@@ -179,7 +190,7 @@ class AttributeSvgParser(LaiCiGou):
         for attribute in attributes:
             predict, rare_degree = self.predict_attribute(svg_xml, attribute)
             actual = self.get_attribute(info['attributes'], attribute)['value']
-            log("{0}预测 {1}， 实际为 {2}".format(attribute, predict, actual))
+            logger.info("{0}预测 {1}， 实际为 {2}".format(attribute, predict, actual))
             correct = predict == actual
             if not correct:
                 fail = True
@@ -234,7 +245,7 @@ class AttributeSvgParser(LaiCiGou):
         sample_count = 0
         for page_no in range(max_page_no):
             page_no = page_no + 1
-            log('第{0}页{1}狗狗'.format(page_no, self.rare_degree_dic[rare_degree]))
+            logger.info('第{0}页{1}狗狗'.format(page_no, self.rare_degree_dic[rare_degree]))
             # 获取市场上售卖的狗狗
             pets_on_sale = self.get_pets_on_sale(page_no, rare_degree)
             # 获取市场上繁育的狗狗
@@ -242,16 +253,16 @@ class AttributeSvgParser(LaiCiGou):
             # 合并市场上售卖和繁育的狗狗
             pets = pets_on_sale + pets_on_breed
             for pet in pets:
-                log('第 {0} 个测试样本 {1}'.format(sample_count, pet['petId']))
+                logger.info('第 {0} 个测试样本 {1}'.format(sample_count, pet['petId']))
                 sample_count = sample_count + 1
                 if sample_count == max_test_sample:
-                    log(self.predict_results)
-                    log(self.predict_fail)
+                    logger.info(self.predict_results)
+                    logger.info(self.predict_fail)
                     return
                 self.predict_one_pet(pet['petId'])
 
-            log(self.predict_results)
-            log(self.predict_fail)
+            logger.info(self.predict_results)
+            logger.info(self.predict_fail)
             time.sleep(5)
 
 

@@ -2,13 +2,12 @@
 import requests
 import json
 import time
-
-from cfg import COOKIE as cookie
-from cfg import PASSWORD as password
-from cfg import BAIDU_PUBLIC_KEY as baidu_pub_key
+import app.logger.logger as logger
+from app.config.cfg import COOKIE as cookie
+from app.config.cfg import PASSWORD as password
+from app.config.cfg import BAIDU_PUBLIC_KEY as baidu_pub_key
 from encrypt import sha256
 from encrypt import rsa_encrypt
-from logger import log
 from lai_ci_gou import LaiCiGou
 
 
@@ -33,7 +32,7 @@ class Shelf(LaiCiGou):
         r = requests.post(url, headers=headers, data=json.dumps(data))
         response = json.loads(r.content)
         if response['errorNo'] != '00':
-            log('创建单子失败：{0}'.format(response['errorMsg']))
+            logger.info('创建单子失败：{0}'.format(response['errorMsg']))
             return None, None
 
         return response['data']['orderId'], response['data']['nonce']
@@ -54,7 +53,7 @@ class Shelf(LaiCiGou):
         r = requests.post(url, headers=headers, data=json.dumps(data))
         response = json.loads(r.content)
         if response['errorNo'] != '00':
-            log('挂出繁育失败: {0}'.format(response['errorMsg']))
+            logger.info('挂出繁育失败: {0}'.format(response['errorMsg']))
 
         return response
 
@@ -78,7 +77,7 @@ class Shelf(LaiCiGou):
         r = requests.post(url, headers=headers, data=json.dumps(data))
         response = json.loads(r.content)
         if response['errorNo'] != '00':
-            log('繁育下架失败: {0}'.format(response['errorMsg']))
+            logger.info('繁育下架失败: {0}'.format(response['errorMsg']))
 
         return response
 
@@ -91,7 +90,7 @@ class Shelf(LaiCiGou):
                 break
 
             pages = pages + 1
-            log('处理第{0}页：'.format(pages))
+            logger.info('处理第{0}页：'.format(pages))
             for pet in pets:
                 time.sleep(10)
                 pet_info = self.get_pet_info_on_market(pet['petId'])
@@ -99,7 +98,7 @@ class Shelf(LaiCiGou):
                 if pet_rare_num != rare_num:
                     continue
 
-                log('挂出繁育 {0}，{1}稀，价格 {2}'.format(pet['petId'], rare_num, price))
+                logger.info('挂出繁育 {0}，{1}稀，价格 {2}'.format(pet['petId'], rare_num, price))
                 self.shelf(pet['petId'], price)
 
             time.sleep(5)
@@ -112,7 +111,7 @@ class Shelf(LaiCiGou):
     # 按稀有属性数量一次性挂出繁育所有的狗
     def shelf_by_rare_nums_once(self, rare_num_price_dic=None):
         if rare_num_price_dic is None:
-            log('没有设置价格字典！')
+            logger.info('没有设置价格字典！')
             return
 
         pages = 0
@@ -122,7 +121,7 @@ class Shelf(LaiCiGou):
                 break
 
             pages = pages + 1
-            log('处理第{0}页：'.format(pages))
+            logger.info('处理第{0}页：'.format(pages))
             for pet in pets:
                 time.sleep(10)
                 pet_info = self.get_pet_info_on_market(pet['petId'])
@@ -131,7 +130,7 @@ class Shelf(LaiCiGou):
                     continue
 
                 price = rare_num_price_dic[rare_num]
-                log('挂出繁育 {0}，{1}稀，价格 {2}'.format(pet['petId'], rare_num, price))
+                logger.info('挂出繁育 {0}，{1}稀，价格 {2}'.format(pet['petId'], rare_num, price))
                 order_id, nonce = self.create(pet['petId'], price)
                 if order_id:
                     self.confirm(pet['petId'], order_id, nonce)
@@ -141,8 +140,8 @@ class Shelf(LaiCiGou):
 
 if __name__ == '__main__':
     shelf = Shelf(cookie)
-    # rare_num_price_dic = {0: 100, 1: 100, 2: 100, 3: 100, 4: 500, 5: 10000}
-    rare_num_price_dic = {0: 100, 1: 100, 2: 100, 3: 100, 4: 500}
+    rare_num_price_dic = {0: 100, 1: 100, 2: 100, 3: 100, 4: 500, 5: 10000}
+    #rare_num_price_dic = {0: 100, 1: 100, 2: 100, 3: 100, 4: 500}
     # 按稀有属性数量批次挂出繁育，时间上会成倍增加，如不需按稀有数量批次上架请使用shelf_by_rare_num_once
     # shelf.shelf_by_rare_nums(rare_num_price_dic)
     # 按稀有属性数量一次性挂出繁育所有的狗

@@ -2,13 +2,12 @@
 import requests
 import json
 import time
-
-from cfg import COOKIE as cookie
-from cfg import PASSWORD as password
-from cfg import BAIDU_PUBLIC_KEY as baidu_pub_key
+import app.logger.logger as logger
+from app.config.cfg import COOKIE as cookie
+from app.config.cfg import PASSWORD as password
+from app.config.cfg import BAIDU_PUBLIC_KEY as baidu_pub_key
 from encrypt import sha256
 from encrypt import rsa_encrypt
-from logger import log
 from lai_ci_gou import LaiCiGou
 
 
@@ -23,7 +22,7 @@ class Sale(LaiCiGou):
 
     # 创建卖出单子
     def create(self, pet_id, price):
-        log('创建卖出狗狗单子 {0}，价格{1}'.format(pet_id, price))
+        logger.info('创建卖出狗狗单子 {0}，价格{1}'.format(pet_id, price))
         url = 'https://pet-chain.baidu.com/data/market/sale/shelf/create'
         headers = self.headers_template
         headers['Referer'] = 'https://pet-chain.baidu.com/chain/detail?channel=center&petId=' + pet_id + '&appId=1&tpl='
@@ -37,7 +36,7 @@ class Sale(LaiCiGou):
         r = requests.post(url, headers=headers, data=json.dumps(data))
         response = json.loads(r.content)
         if response['errorNo'] != '00':
-            log('创建单子失败：{0}'.format(response['errorMsg']))
+            logger.info('创建单子失败：{0}'.format(response['errorMsg']))
 
         return response
 
@@ -58,7 +57,7 @@ class Sale(LaiCiGou):
         r = requests.post(url, headers=headers, data=json.dumps(data))
         response = json.loads(r.content)
         if response['errorNo'] != '00':
-            log('卖出单子确认失败: {0}'.format(response['errorMsg']))
+            logger.info('卖出单子确认失败: {0}'.format(response['errorMsg']))
 
         return response
 
@@ -84,7 +83,7 @@ class Sale(LaiCiGou):
         r = requests.post(url, headers=headers, data=json.dumps(data))
         response = json.loads(r.content)
         if response['errorNo'] != '00':
-            log('取消卖出失败: {0}'.format(response['errorMsg']))
+            logger.info('取消卖出失败: {0}'.format(response['errorMsg']))
 
         return response
 
@@ -117,7 +116,7 @@ class Sale(LaiCiGou):
                 if not include_angel:
                     physique = self.get_attribute(pet_info['attributes'], '体型')
                     if physique == '天使':
-                        log('天使狗狗不卖： {0}'.format(pet['petId']))
+                        logger.info('天使狗狗不卖： {0}'.format(pet['petId']))
                         continue
 
                 self.sale(pet['petId'], rare_num_price_dic[rare_num])

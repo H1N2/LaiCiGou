@@ -3,13 +3,12 @@ import requests
 import json
 import time
 import traceback
-
-from cfg import COOKIE as cookie
-from cfg import PASSWORD as password
-from cfg import BAIDU_PUBLIC_KEY as baidu_pub_key
+import app.logger.logger as logger
+from app.config.cfg import COOKIE as cookie
+from app.config.cfg import PASSWORD as password
+from app.config.cfg import BAIDU_PUBLIC_KEY as baidu_pub_key
 from encrypt import sha256
 from encrypt import rsa_encrypt
-from logger import log
 from sale import Sale
 from shelf import Shelf
 from lai_ci_gou import LaiCiGou
@@ -36,7 +35,7 @@ class Breed(LaiCiGou):
         r = requests.post(url, headers=headers, data=json.dumps(data))
         response = json.loads(r.content)
         if response['errorNo'] != '00':
-            log('获取验证码失败：{0}'.format(response['errorMsg']))
+            logger.info('获取验证码失败：{0}'.format(response['errorMsg']))
             return None, None
 
         return response['data']['seed'], response['data']['img']
@@ -59,9 +58,9 @@ class Breed(LaiCiGou):
         r = requests.post(url, headers=headers, data=json.dumps(data))
         response = json.loads(r.content)
         if response['errorNo'] == '00':
-            log('繁育下单成功')
+            logger.info('繁育下单成功')
         else:
-            log('繁育下单失败: {0}'.format(response['errorMsg']))
+            logger.info('繁育下单失败: {0}'.format(response['errorMsg']))
 
         return response
 
@@ -81,9 +80,9 @@ class Breed(LaiCiGou):
         r = requests.post(url, headers=headers, data=json.dumps(data))
         response = json.loads(r.content)
         if response['errorNo'] == '00':
-            log('繁育确认成功')
+            logger.info('繁育确认成功')
         else:
-            log('繁育确认失败: {0}'.format(response['errorMsg']))
+            logger.info('繁育确认失败: {0}'.format(response['errorMsg']))
 
         return response
 
@@ -95,7 +94,7 @@ class Breed(LaiCiGou):
 
         count = 1
         while True:
-            log('第{0}次尝试繁殖，父亲狗狗ID：{1}, 母亲狗狗ID: {2}，价格 {3}'.format(count, father_id, mother_id, price))
+            logger.info('第{0}次尝试繁殖，父亲狗狗ID：{1}, 母亲狗狗ID: {2}，价格 {3}'.format(count, father_id, mother_id, price))
             count += 1
 
             seed, img = self.get_captcha_and_seed()
@@ -141,16 +140,16 @@ class Breed(LaiCiGou):
 
                 if not father and father_rare_num == rare_num:
                     father = pet
-                    log('选中狗狗父亲：{0}'.format(father['petId']))
+                    logger.info('选中狗狗父亲：{0}'.format(father['petId']))
                     continue
 
                 if not mother and mother_rare_num == rare_num:
                     mother = pet
-                    log('选中狗狗母亲：{0}'.format(mother['petId']))
+                    logger.info('选中狗狗母亲：{0}'.format(mother['petId']))
                     break
             father_id = father['petId'] if father else None
             mother_id = mother['petId'] if mother else None
-            log('第{0}页时： 狗狗父亲 {1}， 狗狗母亲 {2}'.format(page_no, father_id, mother_id))
+            logger.info('第{0}页时： 狗狗父亲 {1}， 狗狗母亲 {2}'.format(page_no, father_id, mother_id))
             if father and mother:
                 break
             time.sleep(5)
@@ -164,13 +163,13 @@ class Breed(LaiCiGou):
             try:
                 father, mother = self.get_parents(father_rare_num, mother_rare_num)
                 if not father or not mother:
-                    log('无满足条件的繁育双亲， 一分钟后重试')
+                    logger.info('无满足条件的繁育双亲， 一分钟后重试')
                     time.sleep(60)
                     continue
 
                 # 未上架繁育，将其上架
                 if father['shelfStatus'] == 0:
-                    log('父亲狗狗{0}处于未上架繁育状态，将其上架'.format(father['petId']))
+                    logger.info('父亲狗狗{0}处于未上架繁育状态，将其上架'.format(father['petId']))
                     shelf = Shelf(self.cookie)
                     shelf.shelf(father['petId'], father_price)
 
@@ -178,25 +177,25 @@ class Breed(LaiCiGou):
                     time.sleep(3 * 60)
                 # 出售中，将其下架然后上架繁育
                 elif father['shelfStatus'] == 1:
-                    log('父亲狗狗{0}处于售卖中, 将其下架， 三分钟后再挂出繁育'.format(father['petId']))
+                    logger.info('父亲狗狗{0}处于售卖中, 将其下架， 三分钟后再挂出繁育'.format(father['petId']))
                     sale = Sale(self.cookie)
                     sale.unsale(father['petId'])
 
                     # 3分钟后再挂出繁育，避免上下架过频繁
                     time.sleep(3 * 60)
 
-                    log('挂出繁育父亲狗狗{0}'.format(father['petId']))
+                    logger.info('挂出繁育父亲狗狗{0}'.format(father['petId']))
                     shelf = Shelf(self.cookie)
                     shelf.shelf(father['petId'], father_price)
 
                 # 出售中，将其下架
                 if mother['shelfStatus'] == 1:
-                    log('母亲狗狗{0}处于出售状态，将其下架然'.format(mother['petId']))
+                    logger.info('母亲狗狗{0}处于出售状态，将其下架然'.format(mother['petId']))
                     sale = Sale(self.cookie)
                     sale.unsale(mother['petId'])
                 # 挂出繁育中，将其下架
                 elif mother['shelfStatus'] == 2:
-                    log('母亲狗狗{0}处于挂出繁育状态，将其下架'.format(mother['petId']))
+                    logger.info('母亲狗狗{0}处于挂出繁育状态，将其下架'.format(mother['petId']))
                     shelf = Shelf(self.cookie)
                     shelf.off_shelf(mother['petId'])
 

@@ -4,19 +4,15 @@ import requests
 import json
 import time
 import traceback
-from cfg import COOKIE as cookie
-from logger import log
+import app.db.mongo as mongo
+import app.logger.logger as logger
+from app.config.cfg import COOKIE as cookie
 from lai_ci_gou import LaiCiGou
-from app.db.mongo import db
 
 
 class Collector(LaiCiGou):
     def __init__(self, cookie):
         super(Collector, self).__init__(cookie)
-
-        self.pets = db['pets']
-
-        self.pet_attributes = db['attributes']
 
     def get_pets_on_sale(self, page_no, rare_degree):
         url = 'https://pet-chain.baidu.com/data/market/queryPetsOnSale'
@@ -82,15 +78,15 @@ class Collector(LaiCiGou):
             'petUrl': pet_info['petUrl'],
             'attributes': pet_info['attributes'],
         }
-        self.pets.insert(pet)
-        log('保存狗狗：{0}'.format(pet_info['petId']))
+        mongo.pet_collection.insert(pet)
+        logger.info('保存狗狗：{0}'.format(pet_info['petId']))
 
     # 保存或者更新属性数据
     def save_update_attributes(self, attributes):
         for attribute in attributes:
-            exist = self.pet_attributes.find_one(attribute)
+            exist = mongo.attribute_collection.find_one(attribute)
             if exist:
-                self.pet_attributes.update_one({
+                mongo.attribute_collection.update_one({
                     '_id': exist['_id']
                 }, {
                     '$inc': {
@@ -99,11 +95,12 @@ class Collector(LaiCiGou):
                 }, upsert=False)
             else:
                 attribute['amount'] = 0
-                self.pet_attributes.insert(attribute)
+                attribute['svgValue'] = None
+                mongo.attribute_collection.insert(attribute)
 
     # 查询该狗狗信息是否已经入库
     def pet_exist(self, pet_id):
-        return self.pets.find({"petId": pet_id}).count() != 0
+        return mongo.pet_collection.find({"petId": pet_id}).count() != 0
 
     # 查询并保存狗狗及其祖宗（如果有的话）
     def query_save_pet_and_ancestors(self, pet_id):
@@ -115,9 +112,9 @@ class Collector(LaiCiGou):
         self.save_update_attributes(info['attributes'])
 
         if info['father']:
-            log('狗狗父亲：{0}'.format(info['father']['petId']))
+            logger.info('狗狗父亲：{0}'.format(info['father']['petId']))
             self.query_save_pet_and_ancestors(info['father']['petId'])
-            log('狗狗母亲：{0}'.format(info['mother']['petId']))
+            logger.info('狗狗母亲：{0}'.format(info['mother']['petId']))
             self.query_save_pet_and_ancestors(info['mother']['petId'])
         else:
             return
@@ -128,7 +125,7 @@ class Collector(LaiCiGou):
         max_page_no = 200
         for page_no in range(max_page_no):
             page_no = page_no + 1
-            log('第{0}页{1}狗狗'.format(page_no, self.rare_degree_dic[rare_degree]))
+            logger.info('第{0}页{1}狗狗'.format(page_no, self.rare_degree_dic[rare_degree]))
             # 获取市场上售卖的狗狗
             pets_on_sale = self.get_pets_on_sale(page_no, rare_degree)
             # 获取市场上繁育的狗狗

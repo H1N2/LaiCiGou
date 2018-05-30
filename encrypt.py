@@ -4,12 +4,10 @@
 
 import base64
 import hashlib
+import app.logger.logger as logger
 from Crypto.PublicKey import RSA as rsa
 from Crypto.Cipher import PKCS1_v1_5 as cipher_PKCS1_v1_5
-
-from cfg import BAIDU_PUBLIC_KEY
-
-from logger import log
+from app.config.cfg import BAIDU_PUBLIC_KEY
 
 
 def sha256(d):
@@ -37,7 +35,7 @@ def rsa_decrypt(pub_key, msg):
 if __name__ == '__main__':
     password = '000000'
 
-    log(sha256(password))
+    logger.info(sha256(password))
     # print("91b4d142823f7d20c5f08df69122de43f35f057a988d9619f6d3138485c9a203")
 
     # pub_key_str = """-----BEGIN RSA PUBLIC KEY-----
@@ -56,4 +54,4 @@ if __name__ == '__main__':
 
     message = "91b4d142823f7d20c5f08df69122de43f35f057a988d9619f6d3138485c9a203|2098831667234045845|1119866306807917546"
     cipher_text = rsa_encrypt(pub_key_str, message)
-    log(cipher_text)
+    logger.info(cipher_text)

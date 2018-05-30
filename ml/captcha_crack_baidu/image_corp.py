@@ -7,7 +7,7 @@ import shutil
 from PIL import Image
 from PIL import ImageFile
 
-from logger import log
+import app.logger.logger as logger
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
@@ -79,10 +79,10 @@ def move_sorted_pics(src, des):
 
                     if not os.path.exists(dst_path):
                         os.makedirs(dst_path)
-                        log('创建文件夹：' + dst_path)
+                        logger.info('创建文件夹：' + dst_path)
 
                     dst = dst_path + file
-                    log('移动文件：从{0}到{1}'.format(src, dst))
+                    logger.info('移动文件：从{0}到{1}'.format(src, dst))
                     shutil.move(src, dst)
 
 
@@ -92,5 +92,5 @@ if __name__ == '__main__':
     base_pic_path = './base_pic/'
     corp(src_path, des_path, REGIONS)
     move_sorted_pics(des_path, base_pic_path)
-    log('end')
+    logger.info('end')
     pass

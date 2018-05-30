@@ -4,13 +4,12 @@ import requests
 import json
 import time
 import traceback
-
-from cfg import COOKIE as cookie
-from cfg import PASSWORD as password
-from cfg import BAIDU_PUBLIC_KEY as baidu_pub_key
+import app.logger.logger as logger
+from app.config.cfg import COOKIE as cookie
+from app.config.cfg import PASSWORD as password
+from app.config.cfg import BAIDU_PUBLIC_KEY as baidu_pub_key
 from encrypt import sha256
 from encrypt import rsa_encrypt
-from logger import log
 from lai_ci_gou import LaiCiGou
 # from ml.captcha_crack_baidu.captcha_crack import Crack
 from ml.captcha_recognize.captcha_recognize_new import Crack
@@ -81,7 +80,7 @@ class Buy(LaiCiGou):
         r = requests.post(url, headers=headers, data=json.dumps(data))
         response = json.loads(r.content)
         if response['errorNo'] != '00':
-            log('获取验证码失败：{0}'.format(response['errorMsg']))
+            logger.info('获取验证码失败：{0}'.format(response['errorMsg']))
             return None, None
 
         return response['data']['seed'], response['data']['img']
@@ -104,7 +103,7 @@ class Buy(LaiCiGou):
         r = requests.post(url, headers=headers, data=json.dumps(data))
         response = json.loads(r.content)
         if response['errorNo'] != '00':
-            log('创建单子失败：{0}'.format(response['errorMsg']))
+            logger.info('创建单子失败：{0}'.format(response['errorMsg']))
 
         return response
 
@@ -125,7 +124,7 @@ class Buy(LaiCiGou):
         r = requests.post(url, headers=headers, data=json.dumps(data))
         response = json.loads(r.content)
         if response['errorNo'] != '00':
-            log('买入失败: {0}'.format(response['errorMsg']))
+            logger.info('买入失败: {0}'.format(response['errorMsg']))
 
         return response
 
@@ -134,7 +133,7 @@ class Buy(LaiCiGou):
         pet_id, price, valid_code, generation = pet['petId'], pet["amount"], pet['validCode'], pet['generation']
         count = 1
         while True:
-            log('第{0}次尝试购买，狗狗ID：{1}, 代数 {2}, 价格 {3}'.format(count, pet_id, generation, price))
+            logger.info('第{0}次尝试购买，狗狗ID：{1}, 代数 {2}, 价格 {3}'.format(count, pet_id, generation, price))
             count += 1
 
             seed, img = self.get_captcha_and_seed(pet_id, valid_code)
@@ -171,7 +170,7 @@ class Buy(LaiCiGou):
 
                     pet_info = self.get_pet_info_on_market(pet['petId'])
                     physique = self.get_attribute(pet_info['attributes'], '体型')
-                    log("{:\u3000<10} {:>8}".format('体型：' + physique, '价格：' + str(price)))
+                    logger.info("{:\u3000<10} {:>8}".format('体型：' + physique, '价格：' + str(price)))
 
                     if physique != '天使':
                         continue
@@ -201,7 +200,7 @@ class Buy(LaiCiGou):
                     response = self.buy(pet)
                     if response['errorNo'] == '00':
                         count = count + 1
-                        log('已购买 {0} 条'.format(count))
+                        logger.info('已购买 {0} 条'.format(count))
 
                     # 购买已达最大数量限制
                     if count == max_count:
@@ -209,7 +208,7 @@ class Buy(LaiCiGou):
 
                     # 10018：您今日交易次数已超限，明天再试试吧
                     if response['errorNo'] == '10018':
-                        log('达到最大交易次数时已购买 {0} 条'.format(count))
+                        logger.info('达到最大交易次数时已购买 {0} 条'.format(count))
                         return
                 time.sleep(5)
             except:
